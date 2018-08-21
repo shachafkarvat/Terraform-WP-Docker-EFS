@@ -1,4 +1,4 @@
-resource "aws_route53_record" "taurak_co_uk" {
+resource "aws_route53_record" "wp-url" {
   zone_id = "${data.aws_route53_zone.dnszone.zone_id}"
   name    = "${var.r53-zone}"
   type    = "A"
@@ -10,12 +10,12 @@ resource "aws_route53_record" "taurak_co_uk" {
   }
 }
 
-resource "aws_route53_record" "www_taurak_co_uk" {
+resource "aws_route53_record" "www_wp-url" {
   zone_id = "${data.aws_route53_zone.dnszone.zone_id}"
   name    = "www.${var.r53-zone}"
   type    = "CNAME"
   ttl     = 5
-  records = ["${aws_route53_record.taurak_co_uk.name}"]
+  records = ["${aws_route53_record.wp-url.name}"]
 }
 
 resource "aws_route53_record" "bastion" {

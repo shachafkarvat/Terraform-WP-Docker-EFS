@@ -46,3 +46,5 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"] # Canonical
 }
+
+variable "artefacts_s3" {}

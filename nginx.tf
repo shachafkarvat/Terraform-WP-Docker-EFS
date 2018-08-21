@@ -3,9 +3,10 @@ resource "aws_launch_configuration" "nginx-lc" {
   image_id = "${data.aws_ami.ubuntu.id}"
 
   # image_id                    = "${var.ami}"
-  instance_type   = "${var.ec2-size}"
-  security_groups = ["${aws_security_group.nginx-sg.id}"]
-  key_name        = "${var.keyname}"
+  instance_type        = "${var.ec2-size}"
+  security_groups      = ["${aws_security_group.nginx-sg.id}"]
+  iam_instance_profile = "${aws_iam_instance_profile.nginx.id}"
+  key_name             = "${var.keyname}"
 
   #   name                        = "${var.basename}-lc"
   associate_public_ip_address = true
@@ -14,9 +15,10 @@ resource "aws_launch_configuration" "nginx-lc" {
 #!/bin/sh
 hostname Nginx
 apt-get update
-apt install -y docker.io
-# snap install docker
+apt install -y docker.io awscli
 while [ ! -S /var/run/docker.sock ] ; do sleep 2; done
+aws s3 cp s3://taurak.co.uk-artefacts/debs/amazon-efs-utils-1.3-1.deb /root
+apt-get -y install /root/amazon-efs-utils*deb
 chgrp ubuntu /var/run/docker.sock
 mkdir /var/WWW
 chown ubuntu:ubuntu /var/WWW
