@@ -20,12 +20,16 @@ while [ ! -S /var/run/docker.sock ] ; do sleep 2; done
 aws s3 cp s3://taurak.co.uk-artefacts/debs/amazon-efs-utils-1.3-1.deb /root
 apt-get -y install /root/amazon-efs-utils*deb
 chgrp ubuntu /var/run/docker.sock
-mkdir /var/WWW
-chown ubuntu:ubuntu /var/WWW
-echo "=== Mounting EFS ==="
 
-echo "Running nginx"
-/usr/bin/docker run -d -p 80:80 --name=nginx nginx
+echo "=== Mounting EFS ==="
+# mkdir /var/WWW
+# mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${aws_efs_file_system.www-root.id}.efs.eu-west-1.amazonaws.com:/ /var/WWW
+# chown ubuntu:ubuntu /var/WWW
+docker volume create --driver local --opt type=nfs --opt o=addr=${aws_efs_file_system.www-root.id}.efs.eu-west-1.amazonaws.com,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport --opt device=:/WP www
+docker volume create --driver local --opt type=nfs --opt o=addr=${aws_efs_file_system.www-root.id}.efs.eu-west-1.amazonaws.com,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport --opt device=:/conf.d conf
+
+echo "=== Running nginx ==="
+/usr/bin/docker run -d -v www:/usr/share/nginx/html -v conf:/etc/nginx/conf.d -p 80:80 --name=nginx nginx
 EOF
 
   lifecycle {
