@@ -78,3 +78,18 @@ resource "aws_security_group" "bastion-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_security_group" "rds" {
+  name        = "WP-rds-mysql-sg"
+  description = "RDS MySQL Security Group"
+  vpc_id      = "${aws_vpc.vpc.id}"
+
+  ingress = [
+    {
+      from_port       = "3306"
+      to_port         = "3306"
+      protocol        = "tcp"
+      security_groups = ["${aws_security_group.nginx-sg.id}"]
+    },
+  ]
+}

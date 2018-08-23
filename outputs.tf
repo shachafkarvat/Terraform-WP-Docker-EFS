@@ -14,3 +14,7 @@ output "EFS" {
 output "RDSPASS" {
   value = "${data.aws_ssm_parameter.rds_password.value}"
 }
+
+output "RDS-Endpoint" {
+  value = "${aws_db_instance.WP-RDS.endpoint}"
+}
