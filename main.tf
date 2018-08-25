@@ -2,14 +2,6 @@ provider "aws" {
   region = "${var.region}"
 }
 
-terraform {
-  backend "s3" {
-    bucket = "taurak.co.uk.terraform"
-    region = "eu-west-2"
-    key    = "state/taurak.co.uk/"
-  }
-}
-
 data "aws_route53_zone" "dnszone" {
   name         = "${var.r53-zone}"
   private_zone = false
