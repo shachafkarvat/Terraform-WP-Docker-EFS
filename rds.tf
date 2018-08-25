@@ -15,8 +15,8 @@ resource "aws_db_subnet_group" "WP_rds_sng" {
 resource "aws_db_instance" "WP-RDS" {
   allocated_storage      = 10
   storage_type           = "gp2"
-  name                   = "taurakwp"
-  username               = "dbadmin"
+  name                   = "${var.DB_NAME}"
+  username               = "${var.DB_USER}"
   password               = "${data.aws_ssm_parameter.rds_password.value}"
   engine                 = "mysql"
   engine_version         = "5.7"

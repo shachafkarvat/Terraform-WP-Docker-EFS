@@ -1,12 +1,13 @@
 resource "aws_vpc" "vpc" {
   cidr_block = "${var.vpc-cidr}"
 
-  tags {
-    Name = "${var.basename}"
-  }
+  tags = "${merge(var.default_tags, map("Name", format("%s", var.basename)))}"
 
   enable_dns_hostnames = true
 }
+
+# Replace with VPC module in the future 
+# https://github.com/terraform-aws-modules/terraform-aws-vpc/blob/master/main.tf
 
 # Public Subnets
 resource "aws_subnet" "subnet-a" {
@@ -14,19 +15,14 @@ resource "aws_subnet" "subnet-a" {
   cidr_block        = "${var.subnet-cidr-a}"
   availability_zone = "${var.region}a"
 
-  tags {
-    Name = "${var.basename}-${var.regionshort}-a"
-  }
+  tags = "${merge(var.default_tags, map("Name", format("%s-subnet-a", var.basename)))}"
 }
 
 resource "aws_subnet" "subnet-b" {
   vpc_id            = "${aws_vpc.vpc.id}"
   cidr_block        = "${var.subnet-cidr-b}"
   availability_zone = "${var.region}b"
-
-  tags {
-    Name = "${var.basename}-${var.regionshort}-b"
-  }
+  tags              = "${merge(var.default_tags, map("Name", format("%s-subnet-b", var.basename)))}"
 }
 
 resource "aws_subnet" "subnet-c" {
@@ -34,9 +30,7 @@ resource "aws_subnet" "subnet-c" {
   cidr_block        = "${var.subnet-cidr-c}"
   availability_zone = "${var.region}c"
 
-  tags {
-    Name = "${var.basename}-${var.regionshort}-c"
-  }
+  tags = "${merge(var.default_tags, map("Name", format("%s-subnet-c", var.basename)))}"
 }
 
 resource "aws_route_table" "subnet-route-table" {
@@ -50,9 +44,7 @@ resource "aws_route_table" "subnet-route-table" {
 resource "aws_internet_gateway" "igw" {
   vpc_id = "${aws_vpc.vpc.id}"
 
-  tags {
-    Name = "${var.basename}-igw"
-  }
+  tags = "${merge(var.default_tags, map("Name", format("%s-igw", var.basename)))}"
 }
 
 resource "aws_route" "subnet-route" {

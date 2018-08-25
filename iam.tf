@@ -1,5 +1,5 @@
 resource "aws_iam_role" "nginx" {
-  name = "nginx-s3-ro"
+  name = "nginx-wp-instance"
 
   assume_role_policy = <<EOF
 {
@@ -54,4 +54,13 @@ resource "aws_iam_role_policy" "s3-ro" {
     ]
 }
 EOF
+}
+
+data "aws_iam_policy" "ReadOnlyAccess" {
+  arn = "arn:aws:iam::aws:policy/AWSCodeCommitReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "codecommit-readonly" {
+  role       = "${aws_iam_role.nginx.id}"
+  policy_arn = "${data.aws_iam_policy.ReadOnlyAccess.arn}"
 }

@@ -25,3 +25,22 @@ variable "keyname" {}
 variable "r53-zone" {}
 
 variable "artefacts_s3" {}
+
+variable "private_subnets" {
+  type = "list"
+}
+
+variable "docker_repo" {
+  default = ""
+}
+
+variable "DB_NAME" {}
+
+variable "DB_USER" {}
+
+variable "default_tags" {
+  type    = "map"
+  default = {}
+}
+
+variable "logs_retention_in_days" {}
