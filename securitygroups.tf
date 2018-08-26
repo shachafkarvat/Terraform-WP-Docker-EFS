@@ -37,6 +37,12 @@ resource "aws_security_group" "nginx-sg" {
       security_groups = ["${aws_security_group.elb-sg.id}"]
     },
     {
+      from_port       = "8080"
+      to_port         = "8080"
+      protocol        = "tcp"
+      security_groups = ["${aws_security_group.elb-sg.id}"]
+    },
+    {
       from_port       = "443"
       to_port         = "443"
       protocol        = "tcp"

@@ -18,6 +18,7 @@ apt-get update
 apt install -y docker.io awscli docker-compose
 while [ ! -S /var/run/docker.sock ] ; do sleep 2; done
 aws s3 cp s3://taurak.co.uk-artefacts/debs/amazon-efs-utils-1.3-1.deb /root
+aws s3 cp s3://taurak.co.uk-artefacts/wp.env /etc/wordpress-variables.env
 apt-get -y install /root/amazon-efs-utils*deb 
 chgrp ubuntu /var/run/docker.sock
 
@@ -35,41 +36,64 @@ docker volume create --driver local --opt type=nfs --opt o=addr=${aws_efs_file_s
 docker volume create --driver local --opt type=nfs --opt o=addr=${aws_efs_file_system.www-root.id}.efs.eu-west-1.amazonaws.com,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport --opt device=:/conf.d conf
 
 echo "=== Running nginx ==="
-/usr/bin/docker run -d -v www:/usr/share/nginx/html -v conf:/etc/nginx/conf.d -p 80:80 --name=nginx nginx
+# /usr/bin/docker run -d -v www:/usr/share/nginx/html -v conf:/etc/nginx/conf.d -p 80:80 --name=nginx nginx
+docker-compose -f /usr/SRC/docker-compose.yml up
+
 EOF
 
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = ["aws_s3_bucket_object.wp_env"]
 }
 
-# Create the wp-config
-data "template_file" "wp-config" {
-  template = "${file("./wp-config.php.tmpl")}"
+data "template_file" "wp-env" {
+  template = "${file("./wp.env.tmpl")}"
 
   vars {
-    DB_NAME          = "${var.DB_NAME}"
-    DB_USER          = "${var.DB_USER}"
-    DB_PASSWORD      = "${data.aws_ssm_parameter.rds_password.value}"
-    DB_HOST          = "${aws_db_instance.WP-RDS.address}"
-    AUTH_KEY         = "${random_string.AUTH_KEY.result}"
-    SECURE_AUTH_KEY  = "${random_string.SECURE_AUTH_KEY.result}"
-    LOGGED_IN_KEY    = "${random_string.LOGGED_IN_KEY.result}"
-    NONCE_KEY        = "${random_string.NONCE_KEY.result}"
-    AUTH_SALT        = "${random_string.AUTH_SALT.result}"
-    SECURE_AUTH_SALT = "${random_string.SECURE_AUTH_SALT.result}"
-    LOGGED_IN_SALT   = "${random_string.LOGGED_IN_SALT.result}"
-    NONCE_SALT       = "${random_string.NONCE_SALT.result}"
+    DB_NAME     = "${var.DB_NAME}"
+    DB_USER     = "${var.DB_USER}"
+    DB_PASSWORD = "${data.aws_ssm_parameter.rds_password.value}"
+    DB_HOST     = "${aws_db_instance.WP-RDS.endpoint}"
   }
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_bucket_object" "wp_env" {
   bucket  = "${var.artefacts_s3}"
-  key     = "wp-config.php"
-  content = "${data.template_file.wp-config.rendered}"
+  key     = "wp.env"
+  content = "${data.template_file.wp-env.rendered}"
 
   # etag   = "${md5(file("path/to/file"))}"
 }
+
+# Create the wp-config
+# data "template_file" "wp-config" {
+#   template = "${file("./wp-config.php.tmpl")}"
+
+#   vars {
+#     DB_NAME          = "${var.DB_NAME}"
+#     DB_USER          = "${var.DB_USER}"
+#     DB_PASSWORD      = "${data.aws_ssm_parameter.rds_password.value}"
+#     DB_HOST          = "${aws_db_instance.WP-RDS.address}"
+#     AUTH_KEY         = "${random_string.AUTH_KEY.result}"
+#     SECURE_AUTH_KEY  = "${random_string.SECURE_AUTH_KEY.result}"
+#     LOGGED_IN_KEY    = "${random_string.LOGGED_IN_KEY.result}"
+#     NONCE_KEY        = "${random_string.NONCE_KEY.result}"
+#     AUTH_SALT        = "${random_string.AUTH_SALT.result}"
+#     SECURE_AUTH_SALT = "${random_string.SECURE_AUTH_SALT.result}"
+#     LOGGED_IN_SALT   = "${random_string.LOGGED_IN_SALT.result}"
+#     NONCE_SALT       = "${random_string.NONCE_SALT.result}"
+#   }
+# }
+
+# resource "aws_s3_bucket_object" "object" {
+#   bucket  = "${var.artefacts_s3}"
+#   key     = "wp-config.php"
+#   content = "${data.template_file.wp-config.rendered}"
+
+#   # etag   = "${md5(file("path/to/file"))}"
+# }
 
 resource "aws_autoscaling_group" "nginx-asg" {
   launch_configuration = "${aws_launch_configuration.nginx-lc.id}"
